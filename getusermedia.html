@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Get Audio Source</title>
+	<title>WebRTC-getUserMedia</title>
 </head>
 <body>
 <h1>Please press the below button</h1>
 <button onclick="getaudio()">Try it</button>
-<p id="demo"></p>
+<p id="demo"></p>  // Just for logging purpose.
 <video autoplay></video>
 
 <script>
@@ -16,14 +16,14 @@
 		return !!(navigator.getUserMedia || navigator.webkitGetUserMedia  || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 	}
 
-	function success()
+	function onSuccess()
 	{
 		document.getElementById("demo").innerHTML+="Sucess Called";
 		var video=document.querySelector("video");
 		video.src=window.URL.createObjectURL(stream);
 	}
 
-	function failed() {
+	function onError() {
          alert("The following error occured: " + err.name);
     }
 
@@ -34,7 +34,7 @@
 			navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia  || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 			document.getElementById("demo").innerHTML="getusermedia is Allowed"+"<br>";
 
-			navigator.getUserMedia({ audio: true, video: true }, success , failed );
+			navigator.getUserMedia({ audio: true, video: true }, onSuccess , onError );
 		}
 		else
 			alert("getUserMedia not supported");

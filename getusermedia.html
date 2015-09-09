@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Get Audio Source</title>
+</head>
+<body>
+<h1>Please press the below button</h1>
+<button onclick="getaudio()">Try it</button>
+<p id="demo"></p>
+<video autoplay></video>
+
+<script>
+
+	function hasgetusermedia()
+	{
+		return !!(navigator.getUserMedia || navigator.webkitGetUserMedia  || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+	}
+
+	function success()
+	{
+		document.getElementById("demo").innerHTML+="Sucess Called";
+		var video=document.querySelector("video");
+		video.src=window.URL.createObjectURL(stream);
+	}
+
+	function failed() {
+         alert("The following error occured: " + err.name);
+    }
+
+	function getaudio()
+	{
+		if(hasgetusermedia())
+		{
+			navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia  || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+			document.getElementById("demo").innerHTML="getusermedia is Allowed"+"<br>";
+
+			navigator.getUserMedia({ audio: true, video: true }, success , failed );
+		}
+		else
+			alert("getUserMedia not supported");
+	}
+	
+</script>
+
+</body>
+</html>

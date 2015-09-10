@@ -16,7 +16,7 @@
 		return !!(navigator.getUserMedia || navigator.webkitGetUserMedia  || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 	}
 
-	function onSuccess()
+	function onSuccess(stream)
 	{
 		document.getElementById("demo").innerHTML+="Sucess Called";
 		var video=document.querySelector("video");

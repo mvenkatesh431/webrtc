@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+        <title>RTPPeerConnection</title>
+</head>
+<body>
+<H1><a href="http://sillycodes.com">RTPPeerConnection Example</a></H1>
+
+<video id="localVideo" autoplay muted></video>
+<video id="remoteVideo" autoplay></video>
+
+<div>
+<button id="startbutton" onclick="start()">start</button>
+<button id="callbutton" onclick="call()">call</button>
+<button id="hangupbutton" onclick="hangup()">hangup</button>
+</div>
+
+<script type="text/javascript">
+        var pc1,pc2;
+        var localstream;
+
+        var startbutton=document.getElementById("startbutton");
+        var callbutton=document.getElementById("callbutton");
+        var hangupbutton=document.getElementById("hangupbutton");
+
+        var localVideo=document.getElementById("localVideo");
+        var remoteVideo=document.getElementById("remoteVideo");
+
+
+      /*  var qvgaConstraints = {
+  			video: {width: {exact: 320}, height: {exact: 240}}
+		};
+
+		var vgaConstraints = {
+  			video: {width: {exact: 640}, height: {exact: 480}}
+		};
+
+		var hdConstraints = {
+  			video: {width: 1280, height: 720}
+		};
+
+		var fullHdConstraints = {
+  			video: {width: {exact: 1920}, height: {exact: 1080}}
+		};
+	  */
+
+        function hasgetusermedia()
+        {
+                navigator.getUserMedia=navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia || navigator.msGetUserMedia ;
+                return !!navigator.getUserMedia;
+        }
+
+        function ongetUserMediaSuccess(stream)
+        {
+                console.log("getUserMedia Success, Attaching local stream.");
+                localVideo.src=window.URL.createObjectURL(stream);
+                localstream=stream;
+        }
+
+        function ongetUserMediaErr (error)
+        {
+                window.alert("Error While capturing getUserMedia "+error.name);
+        }
+
+        function start()
+        {
+                navigator.getUserMedia=navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia || navigator.msGetUserMedia ;
+
+                console.log("Start Function is Called. let's acquire user media");
+                if(hasgetusermedia)
+                {
+                        navigator.getUserMedia( 
+                        	{"audio": 1, "video":{"mandatory":{"minWidth":320,"maxWidth":320,"minHeight":240,"maxHeight":240}}}
+                        	,ongetUserMediaSuccess,ongetUserMediaErr);       
+                }
+                else
+                {
+                        window.alert("No getUserMedia Support ");
+                }
+        }
+
+        function call()
+        {
+                console.log("Call Function called");
+        }
+
+        function hangup()
+        {
+                console.log("hangup Function called");
+                localVideo.pause();
+                localVideo.src="";
+        }
+
+</script>
+
+
+</body>
+</html>
+

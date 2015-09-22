@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-		<meta charset="UTF-8">
+	<meta charset="UTF-8">
         <title>RTPPeerConnection</title>
 </head>
 <body>
@@ -15,6 +15,14 @@
 <button id="callbutton" onclick="call()">call</button>
 <button id="hangupbutton" onclick="hangup()">hangup</button>
 </div>
+
+<style type="text/css">
+	button {
+		margin: 0 20px 0 0;
+  		width: 96px;
+	}
+
+</style>
 
 <script type="text/javascript">
         
@@ -242,7 +250,7 @@
                 console.log("hangup Function called, End the Call");
                 localVideo.pause();
                 localVideo.src="";
-                remoteVideo.pause();
+                localStream.stop();
                 remoteVideo.src="";
                 pc1.close();
                 pc2.close();

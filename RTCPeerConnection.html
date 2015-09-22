@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+		<meta charset="UTF-8">
+        <title>RTPPeerConnection</title>
+</head>
+<body>
+<H1><a href="http://sillycodes.com">RTPPeerConnection Example</a></H1>
+
+<video id="localVideo" autoplay muted></video>
+<video id="remoteVideo" autoplay></video>
+
+<div>
+<button id="startbutton" onclick="start()">start</button>
+<button id="callbutton" onclick="call()">call</button>
+<button id="hangupbutton" onclick="hangup()">hangup</button>
+</div>
+
+<script type="text/javascript">
+        
+        var pc1,pc2;
+        var localStream;
+        var offerOptions = { 
+            offerToReceiveAudio : true,
+            offerToReceiveVideo : true
+        };
+
+        var startbutton=document.getElementById("startbutton");
+        var callbutton=document.getElementById("callbutton");
+        var hangupbutton=document.getElementById("hangupbutton");
+
+        callbutton.disabled=true;
+        hangupbutton.disabled=true;
+
+        var localVideo=document.getElementById("localVideo");
+        var remoteVideo=document.getElementById("remoteVideo");
+
+        function getName(pc) {
+ 			 return (pc === pc1) ? 'pc1' : 'pc2';
+		}
+
+		function getOtherPc(pc) {
+  			return (pc === pc1) ? pc2 : pc1;
+		}		
+
+        function hasgetusermedia()
+        {
+                navigator.getUserMedia=navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia || navigator.msGetUserMedia ;
+                return !!navigator.getUserMedia;
+        }
+
+		function hasRTCPeerConnection() 
+		{
+				window.RTCPeerConnection = window.RTCPeerConnection ||
+				window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+				return !!window.RTCPeerConnection;
+		}
+
+        function ongetUserMediaSuccess(stream)
+        {
+                console.log("getUserMedia Success, Attaching local stream.");
+                localVideo.src=window.URL.createObjectURL(stream);
+                localStream=stream;
+                callbutton.disabled=false;
+                //localstream=window.URL.createObjectURL(stream);
+        }
+
+        function ongetUserMediaErr (error)
+        {
+                window.alert("Error While capturing getUserMedia "+error.name);
+        }
+
+        function start()
+        {
+        		startbutton.disabled=true;
+
+                navigator.getUserMedia=navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia || navigator.msGetUserMedia ;
+
+                console.log("Start Function is Called. let's acquire user media");
+                if(hasgetusermedia())
+                {
+                        navigator.getUserMedia( 
+                        	{"audio": 1, "video":{"mandatory":{"minWidth":320,"maxWidth":320,"minHeight":240,"maxHeight":240}}}
+                        	,ongetUserMediaSuccess,ongetUserMediaErr);       
+                }
+                else
+                {
+                        window.alert("No getUserMedia Support ");
+                }
+        }
+
+        function call()
+        {
+                console.log("Call Function called");
+                callbutton.disabled=true;
+                hangupbutton.disabled=false;
+
+                if(hasRTCPeerConnection())
+                {
+                    console.log("RTPPeerConnection is Supported.");
+                    var servers = null;
+
+                    window.RTCPeerConnection = window.RTCPeerConnection ||
+					window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+
+
+                    /* Let's Create Peer Connections for local and remote streams. */
+                    pc1 = new RTCPeerConnection(servers);
+                    console.log("Created PeerConnection for pc1");
+
+                    pc2 = new RTCPeerConnection(servers);
+                    console.log("Created PeerConnection for pc2");
+
+                    pc1.onicecandidate = function(e){ 
+                                            pc1OnIceCandidate(pc1,e);
+                                        };
+
+                    pc2.onicecandidate = function(e) {
+                                            pc2OnIceCandidate(pc2,e);
+                                        };
+                    // Adding Local Stream.
+                    pc1.addStream(localStream);
+
+                    // PC2 now got pc1 streams.
+                    pc2.onaddstream = gotRemoteStream;
+
+                    // Create a Offer and Send it to pc2, we are on same page. So no need of signalling.
+                    //void createOffer(RTCSessionDescriptionCallback successCallback, RTCPeerConnectionErrorCallback failureCallback, optional MediaConstraints constraints);
+                    pc1.createOffer(onCreateOfferSuccess, onCreateOfferError, offerOptions);
+
+
+                }
+                else
+                {
+                    console.log("RTPPeerConnection is not yet supported ;) ");
+                }
+        }
+
+        var RTCIceCandidate = window.mozRTCIceCandidate || window.webkitRTCIceCandidate || window.RTCIceCandidate;
+
+        function pc1OnIceCandidate(pc1,e)
+        {
+            if(e.candidate)
+            {
+                pc2.addIceCandidate(new RTCIceCandidate(e.candidate),
+                                function()
+                                {
+                                    console.log("ICE candidate is Added");
+                                },
+                                function(error)
+                                {
+                                    console.log("ICE add candidate is failed. ", error);
+                                }
+                );
+                console.log("pc1 ICE candidate : "+e.candidate.candidate);
+            }
+        }
+
+
+        function pc2OnIceCandidate(pc2,e)
+        {
+            if(e.candidate)
+            {
+                pc1.addIceCandidate(new RTCIceCandidate(e.candidate),
+                                function()
+                                {
+                                    console.log("ICE candidate is Added");
+                                },
+                                function(error)
+                                {
+                                    console.log("ICE add candidate is failed. " + error.name);
+                                }
+                );
+                console.log("pc1 ICE candidate : "+e.candidate.candidate);
+            }
+        }
+
+        // PC2 got streams from PC1, add these stream to remoteVideo element.
+        // Becareful i got event, i need to use stream.
+        function gotRemoteStream(e)
+        {
+            remoteVideo.src=window.URL.createObjectURL(e.stream);
+            console.log("pc2 received remote stream");
+        }
+
+        // see for more details. https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/setLocalDescription 
+        function onCreateOfferSuccess(desc)
+        {
+        	console.log("PC1 createOffer Success : ",desc.sdp);
+        	pc1.setLocalDescription(desc, function () { setLocalDescriptorSuccess(pc1) }, setLocalDescriptorError);
+        	console.log("About Set Remote Descriptor for pc2");
+        	pc2.setRemoteDescription(desc, function() { onSetRemoteDescriptorSuccess(pc2) }, onSetRemoteDescriptionError);
+
+        	//Now Pc2 Received offer, let's try to create Answer.
+        	pc2.createAnswer(onCreateAnswerSuccess, onCreateAnswerError);
+
+        }
+
+        function onCreateOfferError(error)
+        {
+        	console.log("Create Offer failed ", error.toString());
+        }
+
+        function setLocalDescriptorSuccess(pc)
+        {
+        	// send the offer to a server that can negotiate with a remote client
+        	console.log(getName(pc)," setLocalDescriptor is Successful.");
+        }
+
+        function setLocalDescriptorError(error)
+        {
+        	console.log("setLocalDescriptor is failed.",error.toString());
+        }
+
+        function onSetRemoteDescriptorSuccess(pc)
+        {
+        	console.log(getName(pc),"Remote Descriptor is Successful");
+        }
+
+        function onSetRemoteDescriptionError(error)
+        {
+        	console.log("setRemoteDescriptor is failed.",error.toString());
+        }
+
+        function onCreateAnswerSuccess(desc)
+        {
+        	console.log(" Create Answer SDP", desc.sdp);
+        	// Let's set local descriptor for PC2
+        	pc2.setLocalDescription(desc, function () { setLocalDescriptorSuccess(pc2) },setLocalDescriptorError);
+
+        	// Now Need to send request over the internet to other end, But here same webPage. so let's set remote descriptor for the pc1
+        	pc1.setRemoteDescription(desc, function () { onSetRemoteDescriptorSuccess(pc1) } , onSetRemoteDescriptionError);
+        }
+
+        function onCreateAnswerError(errorr)
+        {
+        	console.log("Create Answer is failed : ", errorr.name);
+        }
+
+        function hangup()
+        {
+                console.log("hangup Function called, End the Call");
+                localVideo.pause();
+                localVideo.src="";
+                remoteVideo.pause();
+                remoteVideo.src="";
+                pc1.close();
+                pc2.close();
+                pc1=null;
+                pc2=null;
+                startbutton.disabled=false;
+                hangupbutton.disabled=true;
+        }
+
+</script>
+
+</body>
+</html>
+
+
